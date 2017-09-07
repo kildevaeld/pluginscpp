@@ -1,0 +1,9 @@
+[submodule "vendor/tinydir"]
+	path = vendor/tinydir
+	url = https://github.com/cxong/tinydir
+[submodule "vendor/json"]
+	path = vendor/json
+	url = https://github.com/nlohmann/json
+[submodule "vendor/semver.c"]
+	path = vendor/semver.c
+	url = https://github.com/h2non/semver.c
