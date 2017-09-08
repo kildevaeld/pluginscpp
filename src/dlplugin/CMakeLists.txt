@@ -4,7 +4,7 @@ set(SOURCES
     dlplugin.cpp
     dlpluginspec.cpp
     dlpluginloader.cpp
-    pluginspec_p.cpp
+    dlpluginspec_p.cpp
 )
 
 add_library(dlplugin ${SOURCES})

@@ -11,7 +11,7 @@ class PluginLoaderPrivate {
 public:
   PluginLoaderPrivate() {}
 
-  std::unique_ptr<IPlugin> (*_load)();
+  IPlugin *(*_load)();
   void *handle;
   char *(*_get_name)();
   char *(*_get_version)();
@@ -31,7 +31,7 @@ PluginLoader::PluginLoader(std::string name)
     d->m_valid = false;
     return;
   }
-  d->_load = (std::unique_ptr<IPlugin>(*)())dlsym(d->handle, "load");
+  d->_load = (IPlugin*(*)())dlsym(d->handle, "load");
   // d->_get_name = (char *(*)())dlsym(d->handle, "name");
   // d->_get_version = (char *(*)())dlsym(d->handle, "version");
   d->_get_metadata = (char *(*)())dlsym(d->handle, "metadata");
@@ -54,13 +54,13 @@ std::string PluginLoader::get_version() {
 }*/
 
 json PluginLoader::metadata() const {
-  json out(d->_get_metadata());
+  json out = json::parse(d->_get_metadata());
   return out;
 }
 
 IPlugin *PluginLoader::load() {
   if (!d->instance)
-    d->instance = d->_load();
+    d->instance = std::unique_ptr<IPlugin>(d->_load());
   return d->instance.get();
 }
 

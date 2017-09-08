@@ -1,4 +1,5 @@
 #include "plugins/pluginspec.hpp"
+#include "pluginspec_p.hpp"
 #include <string>
 
 PLUGINS_NS_BEGIN
@@ -23,6 +24,7 @@ std::string PluginDependency::toString() const {
   return name + " (" + version + typeString(type) + ")";
 }
 
+/*
 namespace internal {
 
 class PluginSpecPrivate {
@@ -33,9 +35,9 @@ public:
   std::string name;
   std::string version;
 };
-} // namespace internal
+} // namespace internal*/
 
-PluginSpec::PluginSpec() : d(new internal::PluginSpecPrivate) {}
+PluginSpec::PluginSpec() : d(new internal::PluginSpecPrivate(this)) {}
 
 PluginSpec::~PluginSpec() {}
 

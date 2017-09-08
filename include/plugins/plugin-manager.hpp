@@ -1,6 +1,7 @@
 #pragma once
 #include "defines.hpp"
 #include <memory>
+#include <plugins/pluginspec.hpp>
 #include <string>
 
 PLUGINS_NS_BEGIN
@@ -19,12 +20,14 @@ public:
   ~PluginManager();
 
   void addSearchPath(const std::string &path);
+
   void loadPlugins();
 
   void registerProvider(IPluginProvider *provider);
 
 protected:
   void loadPlugin(const std::string &path);
+  void loadPlugin(PluginSpec *spec, PluginSpec::State state);
 
 private:
   std::unique_ptr<internal::PluginManagerPrivate> d;

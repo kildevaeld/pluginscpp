@@ -40,17 +40,22 @@ public:
     Deleted
   };
 
+  enum Error { Valid, CircularDependency };
+
   PluginSpec();
   ~PluginSpec();
 
   std::string name() const;
   std::string version() const;
 
+  std::vector<PluginDependency> dependencies() const;
+
   virtual IPlugin *plugin() = 0;
   virtual json metadata() const = 0;
 
 private:
   std::unique_ptr<internal::PluginSpecPrivate> d;
+  friend class plugins::PluginManager;
 };
 
 PLUGINS_NS_END

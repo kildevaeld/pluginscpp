@@ -19,8 +19,8 @@ PLUGINS_NS_END
   extern const unsigned char plugin_metadata_json[];                           \
   extern unsigned int plugin_metadata_json_len;                                \
   extern "C" {                                                                 \
-  std::unique_ptr<plugins::IPlugin> load() {                                   \
-    return std::make_unique<classType>();                                      \
+  plugins::IPlugin *load() {                                   \
+    return new classType();                                      \
   }                                                                            \
                                                                                \
   const char *metadata() { return (char *)plugin_metadata_json; }              \

@@ -1,5 +1,5 @@
 #include "pluginspec_p.hpp"
-
+#include <sstream>
 PLUGINS_NS_BEGIN
 
 namespace internal {
@@ -20,11 +20,11 @@ const char DESCRIPTION[] = "Description";
 const char URL[] = "Url";
 const char CATEGORY[] = "Category";
 const char PLATFORM[] = "Platform";
-const char DEPENDENCIES[] = "Dependencies";
-const char DEPENDENCY_NAME[] = "Name";
-const char DEPENDENCY_VERSION[] = "Version";
+const char DEPENDENCIES[] = "dependencies";
+const char DEPENDENCY_NAME[] = "name";
+const char DEPENDENCY_VERSION[] = "version";
 const char DEPENDENCY_IID[] = "Context";
-const char DEPENDENCY_TYPE[] = "Type";
+const char DEPENDENCY_TYPE[] = "type";
 const char DEPENDENCY_TYPE_SOFT[] = "optional";
 const char DEPENDENCY_TYPE_HARD[] = "required";
 const char DEPENDENCY_TYPE_TEST[] = "test";
@@ -34,37 +34,64 @@ const char ARGUMENT_PARAMETER[] = "Parameter";
 const char ARGUMENT_DESCRIPTION[] = "Description";
 } // namespace
 
-PluginSpecPrivate::PluginSpecPrivate(plugins::PluginSpec *spec)
-    : loader(std::move(spec)) {}
-
-bool PluginSpecPrivate::read_metadata(const json &metadata) {
-
-  if (!metadata.is_object()) {
-    return false;
-  }
-
-  auto n = metadata.find(PLUGIN_NAME);
-  if (n == metadata.end()) {
-    return report_error("name is missing");
-  }
-
-  name = (*n).get<std::string>();
-
-  n = metadata.find(PLUGIN_VERSION);
-  if (n == metadata.end()) {
-    return report_error("version is missing");
-  }
-
-  version = (*n).get<std::string>();
-
-  return true;
-}
-
 bool PluginSpecPrivate::report_error(const std::string &msg) {
   error_string = msg;
   has_error = true;
   return false;
 }
+
+static inline std::string msgValueMissing(const char *key) {
+  std::stringstream ss;
+  ss << "\"" << key << "\" is missing";
+  return ss.str();
+}
+
+PluginSpecPrivate::PluginSpecPrivate(plugins::PluginSpec *spec) : q(spec) {}
+
+bool PluginSpecPrivate::read(const json &metadata) {
+  auto m = metadata;
+
+  if (!m.is_object()) {
+    return report_error("not a object");
+  }
+
+  auto n = m.find(PLUGIN_NAME);
+  if (n == m.end()) {
+    return report_error("name is missing");
+  }
+
+  name = (*n).get<std::string>();
+
+  n = m.find(PLUGIN_VERSION);
+  if (n == m.end()) {
+    return report_error("version is missing");
+  }
+
+  version = (*n).get<std::string>();
+
+  n = m.find(DEPENDENCIES);
+
+  if (n != m.end() && n->is_array()) {
+    PluginDependency dependency;
+    for (auto &dep : *n) {
+      auto it = dep.find(DEPENDENCY_NAME);
+      if (it == dep.end()) {
+        return report_error(msgValueMissing(DEPENDENCY_NAME));
+      }
+      dependency.name = it->get<std::string>();
+      it = dep.find(DEPENDENCY_VERSION);
+      if (it == dep.end()) {
+        return report_error(msgValueMissing(DEPENDENCY_VERSION));
+      }
+      dependency.version = it->get<std::string>();
+
+      dependencies.push_back(std::move(dependency));
+    }
+  }
+
+  return true;
+}
+
 /*
 static inline QString msgValueMissing(const char *key) {
   return QCoreApplication::translate("PluginSpec", "\"%1\" is missing")

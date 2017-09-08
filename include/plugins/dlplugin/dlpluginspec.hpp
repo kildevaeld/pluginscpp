@@ -21,6 +21,10 @@ public:
 private:
   friend class DLPluginManager;
   std::unique_ptr<internal::DLPluginSpecPrivate> d;
+
+  // PluginSpec interface
+public:
+  virtual json metadata() const;
 };
 
 PLUGINS_NS_END

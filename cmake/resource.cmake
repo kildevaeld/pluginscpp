@@ -2,9 +2,10 @@ set(CURRENT ${CMAKE_CURRENT_LIST_DIR})
 
 # Compilation step for static resoures
 FUNCTION(ADD_RESOURCES out_var)
+
 SET(result)
+
 FOREACH(in_f ${ARGN})
-  message(info ${CURRENT})
   FILE(RELATIVE_PATH src_f ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/${in_f})
   SET(out_f "${PROJECT_BINARY_DIR}/${in_f}.c")
   ADD_CUSTOM_COMMAND(OUTPUT ${out_f}
@@ -16,5 +17,7 @@ FOREACH(in_f ${ARGN})
     )
   LIST(APPEND result ${out_f})
 ENDFOREACH()
+
 SET(${out_var} "${result}" PARENT_SCOPE)
+
 ENDFUNCTION()
