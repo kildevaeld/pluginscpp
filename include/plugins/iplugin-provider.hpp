@@ -1,10 +1,10 @@
 #pragma once
 #include "defines.hpp"
 #include <string>
+#include "pluginspec.hpp"
 
 PLUGINS_NS_BEGIN
 
-class PluginSpec;
 
 class IPluginProvider {
 

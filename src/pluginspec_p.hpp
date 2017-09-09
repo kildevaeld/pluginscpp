@@ -13,19 +13,29 @@ public:
   bool report_error(const std::string &msg);
   bool read(const json &metadata);
   bool resolveDependencies(const std::vector<PluginSpec *> &specs);
+  bool initializeExtensions();
+  bool initializePlugin();
+  bool loadLibrary();
+
+  void kill();
+
+  void enableDependenciesIndirectly();
 
   std::string name;
   std::string version;
 
+  std::vector<std::string> arguments;
   std::vector<PluginDependency> dependencies;
   std::map<PluginDependency, PluginSpec *> dependencySpecs;
   PluginSpec *q;
+  IPlugin *plugin = nullptr;
   PluginSpec::State state = PluginSpec::Invalid;
   std::string error_string;
   PluginSpec::Error error = PluginSpec::Valid;
   bool enabledIndirectly;
   bool has_error = false;
 };
+
 } // namespace internal
 
 PLUGINS_NS_END

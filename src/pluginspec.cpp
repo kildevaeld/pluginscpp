@@ -59,6 +59,14 @@ std::vector<PluginDependency> PluginSpec::dependencies() const {
   return d->dependencies;
 }
 
+std::map<PluginDependency, PluginSpec*> PluginSpec::dependencySpecs() const {
+  return d->dependencySpecs;
+}
+
+bool PluginSpec::isEffectivelyEnabled() const {
+  return true;
+}
+
 bool PluginSpec::provides(const std::string &name, const std::string &version) {
 
 }

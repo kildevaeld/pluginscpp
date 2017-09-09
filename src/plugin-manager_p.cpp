@@ -1,5 +1,12 @@
 #include "plugin-manager_p.hpp"
+#include "helpers.hpp"
+#include "pluginspec_p.hpp"
+#include <iostream>
+#include <plugins/iplugin-provider.hpp>
 #include <plugins/pluginspec.hpp>
+#include <tinydir.h>
+#include <utils/algorithms.hpp>
+
 PLUGINS_NS_BEGIN
 
 namespace internal {
@@ -11,6 +18,35 @@ void PluginManagerPrivate::loadPlugins() {
   }
 }
 
+void PluginManagerPrivate::initializePlugins() {
+  auto queue = loadQueue();
+  //Utils::setMimeStartupPhase(MimeStartupPhase::PluginsInitializing);
+  for (auto spec: queue) {
+    loadPlugin(spec, PluginSpec::Initialized);
+  }
+  
+  //Utils::setMimeStartupPhase(MimeStartupPhase::PluginsDelayedInitializing);
+  utils::algorithms::reverseForeach(queue, [this](PluginSpec *spec) {
+    loadPlugin(spec, PluginSpec::Running);
+    if (spec->state() == PluginSpec::Running) {
+      //delayedInitializeQueue.append(spec);
+    } else {
+      // Plugin initialization failed, so cleanup after it
+      spec->d->kill();
+    }
+  });
+  
+  //emit q->pluginsChanged();
+  //Utils::setMimeStartupPhase(MimeStartupPhase::UpAndRunning);
+
+  //delayedInitializeTimer = new QTimer;
+  //delayedInitializeTimer->setInterval(100);
+  //delayedInitializeTimer->setSingleShot(true);
+  //connect(delayedInitializeTimer, &QTimer::timeout, this,
+  //        &PluginManagerPrivate::nextDelayedInitialize);
+  //delayedInitializeTimer->start();
+}
+
 void PluginManagerPrivate::loadPlugin(PluginSpec *spec,
                                       PluginSpec::State destState) {
   if (spec->has_error() || spec->state() != destState - 1) {
@@ -18,8 +54,88 @@ void PluginManagerPrivate::loadPlugin(PluginSpec *spec,
       logger->error("plugin '{0}@{1}' invalid spec state {2} => {3}",
                     spec->name(), spec->version(), spec->state(), destState);
     }
-    return;
+
+    
   }
+
+  if (!spec->isEffectivelyEnabled() && destState == PluginSpec::Loaded)
+      return;
+
+  switch (destState) {
+  case PluginSpec::Running:
+    profilingReport(">initializeExtensions", spec);
+    spec->d->initializeExtensions();
+    profilingReport("<initializeExtensions", spec);
+    return;
+  case PluginSpec::Deleted:
+    profilingReport(">delete", spec);
+    spec->d->kill();
+    profilingReport("<delete", spec);
+    return;
+  default:
+    break;
+  }
+
+  for (auto it: spec->dependencySpecs()) {
+
+  }
+  // check if dependencies have loaded without error
+  /*QHashIterator<PluginDependency, PluginSpec *> it(spec->dependencySpecs());
+  while (it.hasNext()) {
+    it.next();
+    if (it.key().type != PluginDependency::Required)
+      continue;
+    PluginSpec *depSpec = it.value();
+    if (depSpec->state() != destState) {
+      spec->d->hasError = true;
+      spec->d->errorString =
+          PluginManager::tr("Cannot load plugin because dependency failed to "
+                            "load: %1(%2)\nReason: %3")
+              .arg(depSpec->name())
+              .arg(depSpec->version())
+              .arg(depSpec->errorString());
+      return;
+    }
+  }*/
+  switch (destState) {
+  case PluginSpec::Loaded:
+    profilingReport(">loadLibrary", spec);
+    spec->d->loadLibrary();
+    profilingReport("<loadLibrary", spec);
+    break;
+  case PluginSpec::Initialized:
+    profilingReport(">initializePlugin", spec);
+    spec->d->initializePlugin();
+    profilingReport("<initializePlugin", spec);
+    break;
+  case PluginSpec::Stopped:
+    profilingReport(">stop", spec);
+    /*if (spec->d->stop() == IPlugin::AsynchronousShutdown) {
+      asynchronousPlugins << spec;
+      connect(spec->plugin(), &IPlugin::asynchronousShutdownFinished, this,
+              &PluginManagerPrivate::asyncShutdownFinished);
+    }*/
+    profilingReport("<stop", spec);
+    break;
+  default:
+    break;
+  }
+}
+
+void PluginManagerPrivate::profilingReport(const char *what, const PluginSpec *spec) {
+  /*if (!m_profileTimer.isNull()) {
+    const int absoluteElapsedMS = m_profileTimer->elapsed();
+    const int elapsedMS = absoluteElapsedMS - m_profileElapsedMS;
+    m_profileElapsedMS = absoluteElapsedMS;
+    if (spec)
+      m_profileTotal[spec] += elapsedMS;
+    if (spec)
+      qDebug("%-22s %-22s %-22s %8dms (%8dms)", what, qPrintable(spec->name()),
+             qPrintable(spec->iid()), absoluteElapsedMS, elapsedMS);
+    else
+      qDebug("%-45s %8dms (%8dms)", what, absoluteElapsedMS, elapsedMS);
+  }*/
+  std::cout << what << " " << spec->name() << std::endl;
 }
 
 bool PluginManagerPrivate::loadQueue(
@@ -96,17 +212,29 @@ void PluginManagerPrivate::readPlugins() {
 
     tinydir_close(&dir);
   }
+
+  resolveDependencies();
+
+  utils::algorithms::sort(specs, &PluginSpec::name);
 }
 
 void PluginManagerPrivate::resolveDependencies() {
-  foreach (PluginSpec *spec, pluginSpecs) {
+
+  for (auto spec : specs) {
+    spec->d->enabledIndirectly = false;
+    spec->d->resolveDependencies(specs);
+  }
+  utils::algorithms::reverseForeach(loadQueue(), [](PluginSpec *spec) {
+    spec->d->enableDependenciesIndirectly();
+  });
+  /*foreach (PluginSpec *spec, pluginSpecs) {
     spec->d->enabledIndirectly = false; // reset, is recalculated below
     spec->d->resolveDependencies(pluginSpecs);
   }
 
   Utils::reverseForeach(loadQueue(), [](PluginSpec *spec) {
     spec->d->enableDependenciesIndirectly();
-  });
+  });*/
 }
 
 } // namespace internal

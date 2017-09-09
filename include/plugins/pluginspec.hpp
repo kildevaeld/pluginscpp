@@ -55,8 +55,11 @@ public:
   State state() const;
 
   std::vector<PluginDependency> dependencies() const;
+  std::map<PluginDependency, PluginSpec*> dependencySpecs() const;
 
   bool provides(const std::string &name, const std::string &version);
+
+  bool isEffectivelyEnabled() const;
 
   virtual IPlugin *plugin() = 0;
   virtual json metadata() const = 0;

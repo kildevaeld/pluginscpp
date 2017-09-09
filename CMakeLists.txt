@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD 14)
 include_directories(vendor/tinydir)
 
 option(JSON_BuildTests "Build the unit tests" OFF)
-include_directories(vendor/json)
+include_directories(vendor/json/src)
 
 include(cmake/resource.cmake)
 #include(cmake/sol2.cmake)

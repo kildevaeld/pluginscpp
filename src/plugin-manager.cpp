@@ -1,10 +1,10 @@
 #include "plugins/plugin-manager.hpp"
 #include "helpers.hpp"
 #include "plugin-manager_p.hpp"
-#include "plugins/iplugin-provider.hpp"
 #include "pluginspec_p.hpp"
 #include <iostream>
 #include <plugins/pluginspec.hpp>
+#include "plugins/iplugin-provider.hpp"
 #include <set>
 #include <spdlog/spdlog.h>
 #include <tinydir.h>
@@ -26,6 +26,10 @@ void PluginManager::addSearchPath(const std::string &path) {
 void PluginManager::loadPlugins() {
   d->readPlugins();
   d->loadPlugins();
+}
+
+void PluginManager::initializePlugins() {
+  d->initializePlugins();
 }
 
 void PluginManager::registerProvider(IPluginProvider *provider) {

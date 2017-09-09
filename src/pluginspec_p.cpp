@@ -4,6 +4,7 @@
 #include <plugins/pluginspec.hpp>
 #include <sstream>
 #include <utils/algorithms.hpp>
+#include <plugins/iplugin.hpp>
 
 PLUGINS_NS_BEGIN
 
@@ -101,7 +102,7 @@ bool PluginSpecPrivate::read(const json &metadata) {
 
 bool PluginSpecPrivate::resolveDependencies(
     const std::vector<PluginSpec *> &specs) {
-
+  
   if (has_error)
     return false;
   if (state == PluginSpec::Resolved)
@@ -122,31 +123,129 @@ bool PluginSpecPrivate::resolveDependencies(
     if (!found) {
       if (dependency.type == PluginDependency::Required) {
         has_error = true;
-        /*if (!errorString.isEmpty())
-          errorString.append(QLatin1Char('\n'));
-        errorString.append(
-            QCoreApplication::translate("PluginSpec",
-                                        "Could not resolve dependency '%1(%2)'")
-                .arg(dependency.name)
-                .arg(dependency.version));*/
+       
         if (error_string.length() > 0) {
           error_string.append("\n");
         }
         error_string.append(
-            fmt::format("could not resolve dependency '{0}({1}})'",
+            fmt::format("could not resolve dependency '{0}({1})'",
                         dependency.name, dependency.version));
       }
       continue;
     }
 
-    // resolvedDependencies.insert(dependency, found);
+     //resolvedDependencies.insert(dependency, found);
   }
   if (has_error)
     return false;
 
   dependencySpecs = resolvedDependencies;
-
   state = PluginSpec::Resolved;
+}
+
+bool PluginSpecPrivate::loadLibrary() {
+  if (has_error)
+    return false;
+  if (state != PluginSpec::Resolved) {
+    if (state == PluginSpec::Loaded)
+      return true;
+    has_error = true;
+    error_string = "Loading the library failed because state != Resolved";
+    return false;
+  }
+
+  if (!q->plugin()) {
+    has_error = true;
+    error_string = "could not load";
+    return false;
+  }
+
+  state = PluginSpec::Loaded;
+
+  /*if (!loader.load()) {
+    hasError = true;
+    errorString = QDir::toNativeSeparators(filePath) +
+                  QString::fromLatin1(": ") + loader.errorString();
+    return false;
+  }*/
+  /*IPlugin *pluginObject = qobject_cast<IPlugin *>(loader.instance());
+  if (!pluginObject) {
+    hasError = true;
+    errorString = QCoreApplication::translate(
+        "PluginSpec", "Plugin is not valid (does not derive from IPlugin)");
+    loader.unload();
+    return false;
+  }
+  state = PluginSpec::Loaded;
+  plugin = pluginObject;
+  plugin->d->pluginSpec = q;
+
+  pluginObject->loaded();*/
+
+  return true;
+}
+
+
+bool PluginSpecPrivate::initializePlugin() {
+  if (has_error)
+    return false;
+  if (state != PluginSpec::Loaded) {
+    if (state == PluginSpec::Initialized)
+      return true;    
+    error_string = "Initializing the plugin failed because state != Loaded";
+    has_error = true;
+    return false;
+  }
+  if (!q->plugin()) {
+    error_string = "Internal error: have no plugin instance to initialize";
+    has_error = true;
+    return false;
+  }
+  std::string err;
+  if (!q->plugin()->initialize(arguments, &err)) {
+    error_string = fmt::format("Plugin initialization failed: {0}", err);
+    has_error = true;
+    return false;
+  }
+  state = PluginSpec::Initialized;
+  return true;
+}
+
+bool PluginSpecPrivate::initializeExtensions() {
+  if (has_error)
+    return false;
+  if (state != PluginSpec::Initialized) {
+    if (state == PluginSpec::Running)
+      return true;
+    error_string = "Cannot perform extensionsInitialized because state != Initialized";
+    has_error = true;
+    return false;
+  }
+  if (!q->plugin()) {
+    error_string =  "Internal error: have no plugin instance to perform extensionsInitialized";
+    has_error = true;
+    return false;
+  }
+  q->plugin()->extensionsInitialized();
+  state = PluginSpec::Running;
+  return true;
+}
+
+void PluginSpecPrivate::kill() {
+
+}
+
+void PluginSpecPrivate::enableDependenciesIndirectly() {
+  if (!q->isEffectivelyEnabled()) // plugin not enabled, nothing to do
+    return;
+ 
+  for (auto it: dependencySpecs) {
+    if (it.first.type != PluginDependency::Required)
+      continue;
+     PluginSpec *dependencySpec = it.second;
+     //if (!dependencySpec->isEffectivelyEnabled()) 
+       //dependencySpec->d->enabledIndirectly = true;
+  }
 }
 
 /*

@@ -1,8 +1,9 @@
 #pragma once
 #include "defines.hpp"
 #include <memory>
-#include <plugins/pluginspec.hpp>
+//#include <plugins/pluginspec.hpp>
 #include <string>
+
 
 namespace spdlog {
 class logger;
@@ -26,6 +27,7 @@ public:
   void addSearchPath(const std::string &path);
 
   void loadPlugins();
+  void initializePlugins();
 
   void registerProvider(IPluginProvider *provider);
 
