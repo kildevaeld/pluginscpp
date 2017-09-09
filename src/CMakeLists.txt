@@ -1,12 +1,12 @@
 
 set(SOURCES
-	iplugin.cpp
-	plugin-manager.cpp
-        plugin-manager_p.cpp
-	pluginspec.cpp
-        pluginspec_p.cpp
-        iplugin-provider.cpp
-        helpers.cpp
+  iplugin.cpp
+  plugin-manager.cpp
+  plugin-manager_p.cpp
+  pluginspec.cpp
+  pluginspec_p.cpp
+  iplugin-provider.cpp
+  helpers.cpp
 )
 
 add_library(plugins ${SOURCES})

@@ -1,10 +1,10 @@
 #include "pluginspec_p.hpp"
 #include <fmt/format.h>
 #include <map>
+#include <plugins/iplugin.hpp>
 #include <plugins/pluginspec.hpp>
 #include <sstream>
 #include <utils/algorithms.hpp>
-#include <plugins/iplugin.hpp>
 
 PLUGINS_NS_BEGIN
 
@@ -102,7 +102,7 @@ bool PluginSpecPrivate::read(const json &metadata) {
 
 bool PluginSpecPrivate::resolveDependencies(
     const std::vector<PluginSpec *> &specs) {
-  
+
   if (has_error)
     return false;
   if (state == PluginSpec::Resolved)
@@ -123,7 +123,7 @@ bool PluginSpecPrivate::resolveDependencies(
     if (!found) {
       if (dependency.type == PluginDependency::Required) {
         has_error = true;
-       
+
         if (error_string.length() > 0) {
           error_string.append("\n");
         }
@@ -134,13 +134,15 @@ bool PluginSpecPrivate::resolveDependencies(
       continue;
     }
 
-     //resolvedDependencies.insert(dependency, found);
+    // resolvedDependencies.insert(dependency, found);
   }
   if (has_error)
     return false;
 
   dependencySpecs = resolvedDependencies;
   state = PluginSpec::Resolved;
+
+  return true;
 }
 
 bool PluginSpecPrivate::loadLibrary() {
@@ -161,6 +163,8 @@ bool PluginSpecPrivate::loadLibrary() {
   }
 
   state = PluginSpec::Loaded;
+
+  q->plugin()->loaded();
 
   /*if (!loader.load()) {
     hasError = true;
@@ -185,13 +189,12 @@ bool PluginSpecPrivate::loadLibrary() {
   return true;
 }
 
-
 bool PluginSpecPrivate::initializePlugin() {
   if (has_error)
     return false;
   if (state != PluginSpec::Loaded) {
     if (state == PluginSpec::Initialized)
-      return true;    
+      return true;
     error_string = "Initializing the plugin failed because state != Loaded";
     has_error = true;
     return false;
@@ -217,12 +220,14 @@ bool PluginSpecPrivate::initializeExtensions() {
   if (state != PluginSpec::Initialized) {
     if (state == PluginSpec::Running)
       return true;
-    error_string = "Cannot perform extensionsInitialized because state != Initialized";
+    error_string =
+        "Cannot perform extensionsInitialized because state != Initialized";
     has_error = true;
     return false;
   }
   if (!q->plugin()) {
-    error_string =  "Internal error: have no plugin instance to perform extensionsInitialized";
+    error_string = "Internal error: have no plugin instance to perform "
+                   "extensionsInitialized";
     has_error = true;
     return false;
   }
@@ -231,20 +236,25 @@ bool PluginSpecPrivate::initializeExtensions() {
   return true;
 }
 
-void PluginSpecPrivate::kill() {
+void PluginSpecPrivate::kill() {}
 
+IPlugin::ShutdownFlag PluginSpecPrivate::stop() {
+  if (!plugin)
+    return IPlugin::SynchronousShutdown;
+  state = PluginSpec::Stopped;
+  return plugin->aboutToShutdown();
 }
 
 void PluginSpecPrivate::enableDependenciesIndirectly() {
   if (!q->isEffectivelyEnabled()) // plugin not enabled, nothing to do
     return;
- 
-  for (auto it: dependencySpecs) {
+
+  for (auto it : dependencySpecs) {
     if (it.first.type != PluginDependency::Required)
       continue;
-     PluginSpec *dependencySpec = it.second;
-     //if (!dependencySpec->isEffectivelyEnabled()) 
-       //dependencySpec->d->enabledIndirectly = true;
+    PluginSpec *dependencySpec = it.second;
+    // if (!dependencySpec->isEffectivelyEnabled())
+    // dependencySpec->d->enabledIndirectly = true;
   }
 }
 

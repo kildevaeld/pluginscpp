@@ -1,10 +1,10 @@
 
 
 set(SOURCES
-    dlplugin.cpp
-    dlpluginspec.cpp
-    dlpluginloader.cpp
-    dlpluginspec_p.cpp
+  dlplugin.cpp
+  dlpluginspec.cpp
+  dlpluginloader.cpp
+  dlpluginspec_p.cpp
 )
 
 add_library(dlplugin ${SOURCES})

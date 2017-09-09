@@ -31,6 +31,8 @@ public:
 
   void registerProvider(IPluginProvider *provider);
 
+  void shutdown();
+
 protected:
   // void loadPlugin(const std::string &path);
   // void loadPlugin(PluginSpec *spec, PluginSpec::State state);

@@ -36,6 +36,10 @@ void PluginManager::registerProvider(IPluginProvider *provider) {
   d->providers.push_back(provider);
 }
 
+void PluginManager::shutdown() {
+  d->shutdown();
+}
+
 /*
 void PluginManager::loadPlugin(const std::string &path) {}
 

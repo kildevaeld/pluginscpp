@@ -4,16 +4,29 @@
 
 PLUGINS_NS_BEGIN
 
+class PluginSpec;
+
+namespace internal {
+class IPluginPrivate;
+}
+
 class IPlugin {
 
 public:
-	IPlugin() {}
-	virtual ~IPlugin() {}
+  enum ShutdownFlag { SynchronousShutdown, AsynchronousShutdown };
+  IPlugin();
+  virtual ~IPlugin();
+  virtual void loaded() {}
+  virtual bool initialize(const std::vector<std::string> &args,
+                          std::string *err) = 0;
+  virtual void extensionsInitialized() {}
+  virtual bool delayedInitialize() { return true; }
+  virtual ShutdownFlag aboutToShutdown() { return SynchronousShutdown; }
 
-	virtual bool initialize(const std::vector<std::string> &args, std::string *err) = 0;
-	virtual void extensionsInitialized() {}
+  PluginSpec *spec() const;
 
+private:
+  std::unique_ptr<internal::IPluginPrivate> d;
 };
-
 
 PLUGINS_NS_END

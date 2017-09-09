@@ -20,31 +20,31 @@ void PluginManagerPrivate::loadPlugins() {
 
 void PluginManagerPrivate::initializePlugins() {
   auto queue = loadQueue();
-  //Utils::setMimeStartupPhase(MimeStartupPhase::PluginsInitializing);
-  for (auto spec: queue) {
+  // Utils::setMimeStartupPhase(MimeStartupPhase::PluginsInitializing);
+  for (auto spec : queue) {
     loadPlugin(spec, PluginSpec::Initialized);
   }
-  
-  //Utils::setMimeStartupPhase(MimeStartupPhase::PluginsDelayedInitializing);
+
+  // Utils::setMimeStartupPhase(MimeStartupPhase::PluginsDelayedInitializing);
   utils::algorithms::reverseForeach(queue, [this](PluginSpec *spec) {
     loadPlugin(spec, PluginSpec::Running);
     if (spec->state() == PluginSpec::Running) {
-      //delayedInitializeQueue.append(spec);
+      // delayedInitializeQueue.append(spec);
     } else {
       // Plugin initialization failed, so cleanup after it
       spec->d->kill();
     }
   });
-  
-  //emit q->pluginsChanged();
-  //Utils::setMimeStartupPhase(MimeStartupPhase::UpAndRunning);
 
-  //delayedInitializeTimer = new QTimer;
-  //delayedInitializeTimer->setInterval(100);
-  //delayedInitializeTimer->setSingleShot(true);
-  //connect(delayedInitializeTimer, &QTimer::timeout, this,
+  // emit q->pluginsChanged();
+  // Utils::setMimeStartupPhase(MimeStartupPhase::UpAndRunning);
+
+  // delayedInitializeTimer = new QTimer;
+  // delayedInitializeTimer->setInterval(100);
+  // delayedInitializeTimer->setSingleShot(true);
+  // connect(delayedInitializeTimer, &QTimer::timeout, this,
   //        &PluginManagerPrivate::nextDelayedInitialize);
-  //delayedInitializeTimer->start();
+  // delayedInitializeTimer->start();
 }
 
 void PluginManagerPrivate::loadPlugin(PluginSpec *spec,
@@ -54,12 +54,10 @@ void PluginManagerPrivate::loadPlugin(PluginSpec *spec,
       logger->error("plugin '{0}@{1}' invalid spec state {2} => {3}",
                     spec->name(), spec->version(), spec->state(), destState);
     }
-
-    
   }
 
   if (!spec->isEffectivelyEnabled() && destState == PluginSpec::Loaded)
-      return;
+    return;
 
   switch (destState) {
   case PluginSpec::Running:
@@ -76,8 +74,7 @@ void PluginManagerPrivate::loadPlugin(PluginSpec *spec,
     break;
   }
 
-  for (auto it: spec->dependencySpecs()) {
-
+  for (auto it : spec->dependencySpecs()) {
   }
   // check if dependencies have loaded without error
   /*QHashIterator<PluginDependency, PluginSpec *> it(spec->dependencySpecs());
@@ -110,11 +107,11 @@ void PluginManagerPrivate::loadPlugin(PluginSpec *spec,
     break;
   case PluginSpec::Stopped:
     profilingReport(">stop", spec);
-    /*if (spec->d->stop() == IPlugin::AsynchronousShutdown) {
-      asynchronousPlugins << spec;
-      connect(spec->plugin(), &IPlugin::asynchronousShutdownFinished, this,
-              &PluginManagerPrivate::asyncShutdownFinished);
-    }*/
+    if (spec->d->stop() == IPlugin::AsynchronousShutdown) {
+      // asynchronousPlugins << spec;
+      // connect(spec->plugin(), &IPlugin::asynchronousShutdownFinished, this,
+      //        &PluginManagerPrivate::asyncShutdownFinished);
+    }
     profilingReport("<stop", spec);
     break;
   default:
@@ -122,7 +119,8 @@ void PluginManagerPrivate::loadPlugin(PluginSpec *spec,
   }
 }
 
-void PluginManagerPrivate::profilingReport(const char *what, const PluginSpec *spec) {
+void PluginManagerPrivate::profilingReport(const char *what,
+                                           const PluginSpec *spec) {
   /*if (!m_profileTimer.isNull()) {
     const int absoluteElapsedMS = m_profileTimer->elapsed();
     const int elapsedMS = absoluteElapsedMS - m_profileElapsedMS;
@@ -235,6 +233,44 @@ void PluginManagerPrivate::resolveDependencies() {
   Utils::reverseForeach(loadQueue(), [](PluginSpec *spec) {
     spec->d->enableDependenciesIndirectly();
   });*/
+}
+
+void PluginManagerPrivate::shutdown() {
+  stopAll();
+  /*if (!asynchronousPlugins.isEmpty()) {
+    shutdownEventLoop = new QEventLoop;
+    shutdownEventLoop->exec();
+  }*/
+  deleteAll();
+  /*if (!m_allObjects.isEmpty()) {
+    qDebug() << "There are" << m_allObjects.size()
+             << "objects left in the plugin manager pool.";
+    // Intentionally split debug info here, since in case the list contains
+    // already deleted object we get at least the info about the number of
+    // objects;
+    qDebug() << "The following objects left in the plugin manager pool:"
+             << m_allObjects;
+  }*/
+}
+
+void PluginManagerPrivate::stopAll() {
+  /*if (delayedInitializeTimer && delayedInitializeTimer->isActive()) {
+    delayedInitializeTimer->stop();
+    delete delayedInitializeTimer;
+    delayedInitializeTimer = 0;
+  }
+  QList<PluginSpec *> queue = loadQueue();
+  foreach (PluginSpec *spec, queue) { loadPlugin(spec, PluginSpec::Stopped); }*/
+  auto queue = loadQueue();
+  for (auto spec : queue) {
+    loadPlugin(spec, PluginSpec::Stopped);
+  }
+}
+
+void PluginManagerPrivate::deleteAll() {
+  utils::algorithms::reverseForeach(loadQueue(), [this](PluginSpec *spec) {
+    loadPlugin(spec, PluginSpec::Deleted);
+  });
 }
 
 } // namespace internal

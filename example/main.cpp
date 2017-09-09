@@ -12,4 +12,9 @@ int main(int argc, char **argv) {
   manager.addSearchPath("./example");
   manager.loadPlugins();
   manager.initializePlugins();
+
+  std::cout << "H" << std::endl;
+
+  manager.shutdown();
+
 }

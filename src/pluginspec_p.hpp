@@ -1,5 +1,6 @@
 #pragma once
 #include <plugins/defines.hpp>
+#include <plugins/iplugin.hpp>
 #include <plugins/pluginspec.hpp>
 
 PLUGINS_NS_BEGIN
@@ -18,6 +19,7 @@ public:
   bool loadLibrary();
 
   void kill();
+  IPlugin::ShutdownFlag stop();
 
   void enableDependenciesIndirectly();
 
