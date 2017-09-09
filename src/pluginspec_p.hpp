@@ -12,15 +12,18 @@ public:
 
   bool report_error(const std::string &msg);
   bool read(const json &metadata);
+  bool resolveDependencies(const std::vector<PluginSpec *> &specs);
 
   std::string name;
   std::string version;
 
   std::vector<PluginDependency> dependencies;
+  std::map<PluginDependency, PluginSpec *> dependencySpecs;
   PluginSpec *q;
   PluginSpec::State state = PluginSpec::Invalid;
-  // std::string error_string;
+  std::string error_string;
   PluginSpec::Error error = PluginSpec::Valid;
+  bool enabledIndirectly;
   bool has_error = false;
 };
 } // namespace internal

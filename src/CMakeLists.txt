@@ -2,6 +2,7 @@
 set(SOURCES
 	iplugin.cpp
 	plugin-manager.cpp
+        plugin-manager_p.cpp
 	pluginspec.cpp
         pluginspec_p.cpp
         iplugin-provider.cpp

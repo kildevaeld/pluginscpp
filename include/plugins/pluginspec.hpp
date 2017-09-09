@@ -12,7 +12,8 @@ class IPlugin;
 
 namespace internal {
 class PluginSpecPrivate;
-}
+class PluginManagerPrivate;
+} // namespace internal
 
 struct PluginDependency {
   enum Type { Required, Optional, Test };
@@ -23,6 +24,7 @@ struct PluginDependency {
   std::string version;
   Type type;
   bool operator==(const PluginDependency &other) const;
+  bool operator<(const PluginDependency &other) const;
   std::string toString() const;
 };
 
@@ -40,22 +42,28 @@ public:
     Deleted
   };
 
-  enum Error { Valid, CircularDependency };
+  enum Error { Valid, CircularDependency, DependencyInvalidState };
 
   PluginSpec();
   ~PluginSpec();
 
   std::string name() const;
   std::string version() const;
+  bool has_error() const;
+  std::string error_string() const;
+
+  State state() const;
 
   std::vector<PluginDependency> dependencies() const;
+
+  bool provides(const std::string &name, const std::string &version);
 
   virtual IPlugin *plugin() = 0;
   virtual json metadata() const = 0;
 
 private:
   std::unique_ptr<internal::PluginSpecPrivate> d;
-  friend class plugins::PluginManager;
+  friend class internal::PluginManagerPrivate;
 };
 
 PLUGINS_NS_END

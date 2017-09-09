@@ -1,5 +1,10 @@
 #include "pluginspec_p.hpp"
+#include <fmt/format.h>
+#include <map>
+#include <plugins/pluginspec.hpp>
 #include <sstream>
+#include <utils/algorithms.hpp>
+
 PLUGINS_NS_BEGIN
 
 namespace internal {
@@ -35,7 +40,7 @@ const char ARGUMENT_DESCRIPTION[] = "Description";
 } // namespace
 
 bool PluginSpecPrivate::report_error(const std::string &msg) {
-  error_string = msg;
+  // error_string = msg;
   has_error = true;
   return false;
 }
@@ -89,7 +94,59 @@ bool PluginSpecPrivate::read(const json &metadata) {
     }
   }
 
+  state = PluginSpec::Read;
+
   return true;
+}
+
+bool PluginSpecPrivate::resolveDependencies(
+    const std::vector<PluginSpec *> &specs) {
+
+  if (has_error)
+    return false;
+  if (state == PluginSpec::Resolved)
+    state =
+        PluginSpec::Read; // Go back, so we just re-resolve the dependencies.
+  if (state != PluginSpec::Read) {
+    error_string = "Resolving dependencies failed because state != Read";
+    error = PluginSpec::DependencyInvalidState;
+    has_error = true;
+    return false;
+  }
+  std::map<PluginDependency, PluginSpec *> resolvedDependencies;
+  for (auto &dependency : dependencies) {
+    PluginSpec *const found = utils::algorithms::findOrDefault(
+        specs, [&dependency](PluginSpec *spec) {
+          return spec->provides(dependency.name, dependency.version);
+        });
+    if (!found) {
+      if (dependency.type == PluginDependency::Required) {
+        has_error = true;
+        /*if (!errorString.isEmpty())
+          errorString.append(QLatin1Char('\n'));
+        errorString.append(
+            QCoreApplication::translate("PluginSpec",
+                                        "Could not resolve dependency '%1(%2)'")
+                .arg(dependency.name)
+                .arg(dependency.version));*/
+        if (error_string.length() > 0) {
+          error_string.append("\n");
+        }
+        error_string.append(
+            fmt::format("could not resolve dependency '{0}({1}})'",
+                        dependency.name, dependency.version));
+      }
+      continue;
+    }
+
+    // resolvedDependencies.insert(dependency, found);
+  }
+  if (has_error)
+    return false;
+
+  dependencySpecs = resolvedDependencies;
+
+  state = PluginSpec::Resolved;
 }
 
 /*

@@ -18,6 +18,12 @@ include(cmake/resource.cmake)
 add_subdirectory(vendor/spdlog)
 include_directories(vendor/spdlog/include)
 
+add_subdirectory(vendor/fmt)
+include_directories(vendor/fmt)
+
+
+add_subdirectory(src/utils)
+include_directories(src/utils/include)
 add_subdirectory(src)
 add_subdirectory(src/dlplugin)
 add_subdirectory(example)

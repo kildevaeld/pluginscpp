@@ -4,6 +4,10 @@
 #include <plugins/pluginspec.hpp>
 #include <string>
 
+namespace spdlog {
+class logger;
+}
+
 PLUGINS_NS_BEGIN
 
 namespace internal {
@@ -15,7 +19,7 @@ class IPluginProvider;
 class PluginManager {
 
 public:
-  PluginManager();
+  PluginManager(std::shared_ptr<spdlog::logger> logger);
   PluginManager(const PluginManager &other) = delete;
   ~PluginManager();
 
@@ -26,8 +30,8 @@ public:
   void registerProvider(IPluginProvider *provider);
 
 protected:
-  void loadPlugin(const std::string &path);
-  void loadPlugin(PluginSpec *spec, PluginSpec::State state);
+  // void loadPlugin(const std::string &path);
+  // void loadPlugin(PluginSpec *spec, PluginSpec::State state);
 
 private:
   std::unique_ptr<internal::PluginManagerPrivate> d;
