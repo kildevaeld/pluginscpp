@@ -239,10 +239,10 @@ bool PluginSpecPrivate::initializeExtensions() {
 void PluginSpecPrivate::kill() {}
 
 IPlugin::ShutdownFlag PluginSpecPrivate::stop() {
-  if (!plugin)
+  if (!q->plugin())
     return IPlugin::SynchronousShutdown;
   state = PluginSpec::Stopped;
-  return plugin->aboutToShutdown();
+  return q->plugin()->aboutToShutdown();
 }
 
 void PluginSpecPrivate::enableDependenciesIndirectly() {
