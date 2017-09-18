@@ -20,6 +20,8 @@ IPlugin::~IPlugin() {}
 
 PluginSpec *IPlugin::spec() const { return d->q; }
 
+void IPlugin::addObject(const Any &object) {}
+
 // namespace internal
 
 PLUGINS_NS_END

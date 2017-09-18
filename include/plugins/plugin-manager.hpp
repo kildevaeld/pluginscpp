@@ -24,8 +24,8 @@ public:
   PluginManager(const PluginManager &other) = delete;
   ~PluginManager();
 
-  static PluginManager *instance() {}
-  static void addObject(const Any &obj) {}
+  static PluginManager *instance();
+  static void addObject(const Any &obj);
 
   void addSearchPath(const std::string &path);
 
