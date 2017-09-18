@@ -1,10 +1,10 @@
 #include "plugins/plugin-manager.hpp"
 #include "helpers.hpp"
 #include "plugin-manager_p.hpp"
+#include "plugins/iplugin-provider.hpp"
 #include "pluginspec_p.hpp"
 #include <iostream>
 #include <plugins/pluginspec.hpp>
-#include "plugins/iplugin-provider.hpp"
 #include <set>
 #include <spdlog/spdlog.h>
 #include <tinydir.h>
@@ -12,10 +12,18 @@
 
 PLUGINS_NS_BEGIN
 
+static PluginManager *m_instance = 0;
+
 PluginManager::PluginManager(std::shared_ptr<spdlog::logger> logger)
-    : d(new internal::PluginManagerPrivate(logger)) {}
+    : d(new internal::PluginManagerPrivate(logger)) {
+  m_instance = this;
+}
 
 PluginManager::~PluginManager() {}
+
+PluginManager *PluginManager::instance() { return m_instance; }
+
+void PluginManager::addObject(const Any &obj) {}
 
 void PluginManager::addSearchPath(const std::string &path) {
   if (d->search_paths.find(path) != d->search_paths.end()) {
@@ -28,17 +36,13 @@ void PluginManager::loadPlugins() {
   d->loadPlugins();
 }
 
-void PluginManager::initializePlugins() {
-  d->initializePlugins();
-}
+void PluginManager::initializePlugins() { d->initializePlugins(); }
 
 void PluginManager::registerProvider(IPluginProvider *provider) {
   d->providers.push_back(provider);
 }
 
-void PluginManager::shutdown() {
-  d->shutdown();
-}
+void PluginManager::shutdown() { d->shutdown(); }
 
 /*
 void PluginManager::loadPlugin(const std::string &path) {}

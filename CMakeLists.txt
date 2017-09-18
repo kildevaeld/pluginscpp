@@ -21,9 +21,11 @@ include_directories(vendor/spdlog/include)
 add_subdirectory(vendor/fmt)
 include_directories(vendor/fmt)
 
-
 add_subdirectory(src/utils)
 include_directories(src/utils/include)
+
+include_directories(vendor/anycpp)
+
 add_subdirectory(src)
 add_subdirectory(src/dlplugin)
 add_subdirectory(example)

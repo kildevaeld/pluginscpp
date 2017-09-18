@@ -2,8 +2,8 @@
 #include "defines.hpp"
 #include <memory>
 //#include <plugins/pluginspec.hpp>
+#include <any++.h>
 #include <string>
-
 
 namespace spdlog {
 class logger;
@@ -23,6 +23,9 @@ public:
   PluginManager(std::shared_ptr<spdlog::logger> logger);
   PluginManager(const PluginManager &other) = delete;
   ~PluginManager();
+
+  static PluginManager *instance() {}
+  static void addObject(const Any &obj) {}
 
   void addSearchPath(const std::string &path);
 
